@@ -1,0 +1,19 @@
+import random
+
+def partition(arr, low, high):
+    rand_idx = random.randint(low, high) # Рандомизация выбираем случайный индекс и меняем с последним
+    arr[rand_idx], arr[high] = arr[high], arr[rand_idx]
+    pivot = arr[high]
+    i = low - 1  # Индекс границы элементов меньше pivot
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i] # Меняем местами, если элемент меньше pivot
+    arr[i + 1], arr[high] = arr[high], arr[i + 1] # Ставим pivot на его место
+    return i + 1
+
+def quick_sort(arr, low, high):
+    if low < high:
+        pi = partition(arr, low, high) # Получаем индекс разделения
+        quick_sort(arr, low, pi - 1) # Рекурсивно сортируем левую и правую части
+        quick_sort(arr, pi + 1, high)
