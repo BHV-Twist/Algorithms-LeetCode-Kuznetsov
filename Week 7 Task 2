@@ -1,0 +1,29 @@
+import random
+
+def partition(arr, low, high):
+    rand_idx = random.randint(low, high) # Выбираем случайный индекс для опорного элемента
+    arr[rand_idx], arr[high] = arr[high], arr[rand_idx] # Меняем его с последним, чтобы удобно работать по схеме Ломуто 
+    pivot = arr[high]
+    i = low - 1  # Граница элементов, которые меньше или равны pivot
+    for j in range(low, high): # Перекидываем все элементы меньше pivot в левую часть
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+            
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]  # Ставим сам pivot на его финальное место (индекс i + 1)
+    return i + 1
+
+def quick_select(arr, k):
+    def select(low, high):
+        if low == high: # Если в подмассиве один элемент — это и есть искомое 
+            return arr[low]
+        pi = partition(arr, low, high) # Разделяем массив и получаем позицию опорного элемента
+        
+        if k == pi: # Если индекс опорного элемента совпал с k — мы нашли результа
+            return arr[k]
+        elif k < pi: # Если k меньше, ищем только в левой части
+            return select(low, pi - 1)
+        else: # Если k больше, ищем только в правой части
+            return select(pi + 1, high)
+            
+    return select(0, len(arr) - 1)
