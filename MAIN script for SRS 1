@@ -1,0 +1,106 @@
+import time
+import random
+import sys
+import matplotlib.pyplot as plt
+
+# Увеличиваем лимит рекурсии для работы QuickSort на больших массивах
+sys.setrecursionlimit(100000)
+
+# 1. ФУНКЦИИ СОРТИРОВКИ
+def selection_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr
+
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+# 2. ГЕНЕРАЦИЯ ДАННЫХ
+def get_data(size, data_type):
+    if data_type == "random":
+        return [random.randint(0, size) for _ in range(size)]
+    elif data_type == "sorted":
+        return list(range(size))
+    elif data_type == "reversed":
+        return list(range(size, 0, -1))
+    elif data_type == "almost_sorted":
+        arr = list(range(size))
+        for _ in range(int(size * 0.05)):
+            a, b = random.randint(0, size-1), random.randint(0, size-1)
+            arr[a], arr[b] = arr[b], arr[a]
+        return arr
+
+# 3. ЗАПУСК ТЕСТОВ (5 итераций для усреднения)
+sizes = [1000, 5000, 10000, 50000]
+data_types = ["random", "almost_sorted", "sorted", "reversed"]
+
+results = {
+    "Selection Sort": {dt: [] for dt in data_types},
+    "QuickSort": {dt: [] for dt in data_types}
+}
+
+for size in sizes:
+    print(f"Выполняю замеры для n = {size}...")
+    for dt in data_types:
+        # Тест QuickSort (5 итераций)
+        q_times = []
+        for _ in range(5): 
+            data = get_data(size, dt)
+            start = time.perf_counter()
+            quick_sort(data)
+            q_times.append(time.perf_counter() - start)
+        results["QuickSort"][dt].append(sum(q_times) / 5)
+
+        # Тест Selection Sort (5 итераций, до 10 000 элементов)
+        if size <= 10000:
+            s_times = []
+            for _ in range(5):
+                data = get_data(size, dt)
+                start = time.perf_counter()
+                selection_sort(data)
+                s_times.append(time.perf_counter() - start)
+            results["Selection Sort"][dt].append(sum(s_times) / 5)
+        else:
+            results["Selection Sort"][dt].append(None)
+
+# 4. ВЫВОД ПОЛНОЙ ТАБЛИЦЫ
+print("\n" + "="*115)
+print(f"{'АЛГОРИТМ':<18} | {'ТИП ДАННЫХ':<18} | {'n=1000':<15} | {'n=5000':<15} | {'n=10000':<15} | {'n=50000':<15}")
+print("-" * 115)
+for alg in ["Selection Sort", "QuickSort"]:
+    for dt in data_types:
+        times = results[alg][dt]
+        fmt = [f"{t:.5f} s" if t is not None else "N/A (Too slow)" for t in times]
+        print(f"{alg:<18} | {dt:<18} | {fmt[0]:<15} | {fmt[1]:<15} | {fmt[2]:<15} | {fmt[3]:<15}")
+print("="*115)
+
+# 5. ВЫВОД ВСЕХ ГРАФИКОВ
+
+for dt in data_types:
+    plt.figure(figsize=(10, 5))
+    
+    # Линия QuickSort
+    plt.plot(sizes, results["QuickSort"][dt], 'o-', label='QuickSort (O(n log n))', color='blue')
+    
+    # Линия Selection Sort
+    s_x = [sizes[i] for i, v in enumerate(results["Selection Sort"][dt]) if v is not None]
+    s_y = [v for v in results["Selection Sort"][dt] if v is not None]
+    plt.plot(s_x, s_y, 's-', label='Selection Sort (O(n^2))', color='red')
+    
+    plt.title(f"Сравнение производительности: {dt.upper()} данные")
+    plt.xlabel("Размер массива (n)")
+    plt.ylabel("Среднее время (секунды)")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.show()
